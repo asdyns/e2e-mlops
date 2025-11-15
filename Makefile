@@ -7,6 +7,7 @@ help:
 	@echo "  make install         - Install dependencies"
 	@echo "  make train           - Run training pipeline"
 	@echo "  make serve           - Start FastAPI inference service"
+	@echo "  make mlflow-ui       - Start MLflow UI (http://localhost:5000)"
 	@echo "  make test            - Run tests"
 	@echo "  make docker-build    - Build Docker image"
 	@echo "  make docker-run      - Run Docker container"
@@ -25,13 +26,28 @@ help:
 	@echo "  make clean           - Clean generated files"
 
 install:
-	pip install -r requirements.txt
+	@if [ ! -d .venv ]; then python3 -m venv .venv; fi
+	. .venv/bin/activate && pip install --upgrade pip setuptools wheel && pip install --only-binary :all: -r requirements.txt || pip install -r requirements.txt
 
 train:
 	cd flows && python train_flow.py run
 
 serve:
 	uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
+
+mlflow-ui:
+	@echo "Starting MLflow UI..."
+	@echo "Access at: http://localhost:5000"
+	@if [ -d "flows/mlflow/mlruns" ] && [ -n "$$(ls -A flows/mlflow/mlruns 2>/dev/null)" ]; then \
+		echo "Using MLflow data from: flows/mlflow/mlruns"; \
+		. .venv/bin/activate && mlflow ui --backend-store-uri file:./flows/mlflow/mlruns --host 0.0.0.0 --port 5000; \
+	elif [ -d "mlflow/mlruns" ] && [ -n "$$(ls -A mlflow/mlruns 2>/dev/null)" ]; then \
+		echo "Using MLflow data from: mlflow/mlruns"; \
+		. .venv/bin/activate && mlflow ui --backend-store-uri file:./mlflow/mlruns --host 0.0.0.0 --port 5000; \
+	else \
+		echo "No MLflow data found. Run 'make train' first to generate experiments."; \
+		. .venv/bin/activate && mlflow ui --backend-store-uri file:./mlflow/mlruns --host 0.0.0.0 --port 5000; \
+	fi
 
 test:
 	pytest tests/ -v --cov=api --cov=flows

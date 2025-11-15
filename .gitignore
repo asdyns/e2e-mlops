@@ -43,6 +43,8 @@ htmlcov/
 # MLflow
 mlflow/mlruns/
 mlflow/mlartifacts/
+flows/mlflow/mlruns/
+flows/mlflow/mlartifacts/
 
 # Logs
 logs/
@@ -72,3 +74,6 @@ Thumbs.db
 # Metaflow
 .metaflow/
 
+# Model
+model/
+*.pkl

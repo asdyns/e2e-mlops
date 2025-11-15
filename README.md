@@ -58,7 +58,7 @@ project/
 
 1. **Clone the repository** (if applicable) or navigate to the project directory:
    ```bash
-   cd cursor-ml
+   cd e2e-mlops
    ```
 
 2. **Install dependencies**:
