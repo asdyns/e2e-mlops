@@ -6,6 +6,7 @@ A complete machine learning system for house price prediction using Linear Regre
 - **MLflow** for experiment tracking and model registry
 - **FastAPI** for model inference service
 - **Docker** containerization
+- **Kubernetes** deployment (kind for local development)
 - **Model monitoring** with prediction logging and drift detection
 
 ## 📁 Project Structure
@@ -30,6 +31,14 @@ project/
 │   ├── test_training.py
 │   ├── test_inference.py
 │   └── test_api.py
+├── k8s/                      # Kubernetes manifests
+│   ├── deployment.yaml
+│   ├── service.yaml
+│   ├── pvc.yaml
+│   ├── configmap.yaml
+│   ├── namespace.yaml
+│   ├── kind-config.yaml
+│   └── README.md
 ├── Dockerfile
 ├── requirements.txt
 ├── README.md
@@ -41,7 +50,9 @@ project/
 ### Prerequisites
 
 - Python 3.10+
-- Docker (optional, for containerized deployment)
+- Docker (for containerized deployment)
+- kind (for local Kubernetes - optional)
+- kubectl (for Kubernetes deployment - optional)
 
 ### Installation
 
@@ -159,6 +170,115 @@ docker run -p 8000:8000 \
 
 The service will be available at http://localhost:8000
 
+## ☸️ Kubernetes Deployment (kind)
+
+Deploy the inference service to a local Kubernetes cluster using kind.
+
+### Prerequisites
+
+- [kind](https://kind.sigs.k8s.io/) installed
+- [kubectl](https://kubernetes.io/docs/tasks/tools/) installed
+
+### Quick Start
+
+1. **Create kind cluster:**
+   ```bash
+   make kind-create
+   ```
+
+2. **Deploy to Kubernetes:**
+   ```bash
+   make k8s-deploy
+   ```
+   
+   This will:
+   - Build the Docker image
+   - Load it into kind
+   - Create namespace and resources
+   - Deploy the application
+   - Expose the service on port 30080
+
+3. **Access the service:**
+   ```bash
+   # Check status
+   make k8s-status
+   
+   # Access API
+   curl http://localhost:30080/health
+   curl http://localhost:30080/docs
+   
+   # Or use port forwarding
+   make k8s-port-forward
+   # Then access at http://localhost:8000
+   ```
+
+### Kubernetes Commands
+
+```bash
+make kind-create        # Create kind cluster
+make kind-delete        # Delete kind cluster
+make kind-load-image    # Load Docker image into kind
+make k8s-setup          # Setup namespace and resources
+make k8s-deploy         # Deploy application
+make k8s-delete         # Delete deployment
+make k8s-status         # Check deployment status
+make k8s-logs           # View pod logs
+make k8s-port-forward   # Port forward to service
+```
+
+### Manual Deployment
+
+```bash
+# Create namespace
+kubectl apply -f k8s/namespace.yaml
+
+# Create ConfigMap and PVCs
+kubectl apply -f k8s/configmap.yaml
+kubectl apply -f k8s/pvc.yaml
+
+# Deploy application
+kubectl apply -f k8s/deployment.yaml
+kubectl apply -f k8s/service.yaml
+```
+
+### Using Kustomize
+
+```bash
+kubectl apply -k k8s/
+```
+
+### Monitoring Kubernetes Deployment
+
+```bash
+# View pods
+kubectl get pods -n ml-system
+
+# View logs
+make k8s-logs
+# or
+kubectl logs -f -l app=house-price-api -n ml-system
+
+# Scale deployment
+kubectl scale deployment house-price-api --replicas=3 -n ml-system
+
+# Update deployment (after code changes)
+make docker-build
+make kind-load-image
+kubectl rollout restart deployment/house-price-api -n ml-system
+```
+
+### Cleanup
+
+```bash
+# Delete deployment
+make k8s-delete
+
+# Delete kind cluster
+make kind-delete
+```
+
+For detailed Kubernetes documentation, see [k8s/README.md](k8s/README.md).
+
 ## 🧪 Testing
 
 Run all tests:
@@ -248,6 +368,7 @@ initialize_drift_detector(reference_data, threshold=0.1)
 
 ## 📝 Makefile Commands
 
+### Basic Commands
 ```bash
 make help          # Show available commands
 make install       # Install dependencies
@@ -257,6 +378,19 @@ make test          # Run tests
 make docker-build  # Build Docker image
 make docker-run    # Run Docker container
 make clean         # Clean generated files
+```
+
+### Kubernetes (kind) Commands
+```bash
+make kind-create       # Create kind cluster
+make kind-delete       # Delete kind cluster
+make kind-load-image   # Load Docker image into kind
+make k8s-setup         # Setup Kubernetes namespace and resources
+make k8s-deploy        # Deploy application to Kubernetes
+make k8s-delete        # Delete Kubernetes deployment
+make k8s-status        # Check deployment status
+make k8s-logs          # View pod logs
+make k8s-port-forward  # Port forward to service
 ```
 
 ## 🛠️ Development

@@ -1,0 +1,11 @@
+# Storage class setup for kind
+# This uses local-path-provisioner for persistent volumes in kind
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: standard
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: rancher.io/local-path
+volumeBindingMode: WaitForFirstConsumer
+

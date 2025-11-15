@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: house-price-api
+  namespace: ml-system
+  labels:
+    app: house-price-api
+    version: v1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: house-price-api
+  template:
+    metadata:
+      labels:
+        app: house-price-api
+        version: v1
+    spec:
+      containers:
+      - name: api
+        image: house-price-api:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8000
+          name: http
+          protocol: TCP
+        env:
+        - name: PYTHONPATH
+          value: "/app"
+        - name: MLFLOW_TRACKING_URI
+          value: "file:./mlflow/mlruns"
+        - name: MODEL_NAME
+          value: "linear-regression-house-price"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        volumeMounts:
+        - name: model-storage
+          mountPath: /app/model
+        - name: mlflow-storage
+          mountPath: /app/mlflow
+        - name: logs-storage
+          mountPath: /app/logs
+      volumes:
+      - name: model-storage
+        persistentVolumeClaim:
+          claimName: model-pvc
+      - name: mlflow-storage
+        persistentVolumeClaim:
+          claimName: mlflow-pvc
+      - name: logs-storage
+        persistentVolumeClaim:
+          claimName: logs-pvc
+
