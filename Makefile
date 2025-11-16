@@ -123,7 +123,7 @@ k8s-port-forward:
 	kubectl port-forward -n ml-system service/house-price-api-service 8000:8000
 
 clean:
-	find . -type d -name __pycache__ -exec rm -r {} + 2>/dev/null || true
+	find . -type d -name __pycache__ -exec rm -r {} + 2>/de/null || true
 	find . -type f -name "*.pyc" -delete
 	find . -type f -name "*.pyo" -delete
 	find . -type f -name ".pytest_cache" -delete

@@ -7,7 +7,7 @@ pandas>=2.0.0,<3.0.0
 metaflow==2.11.0
 
 # MLflow
-mlflow==2.8.1
+mlflow>=2.11.0
 
 # FastAPI
 fastapi==0.104.1
